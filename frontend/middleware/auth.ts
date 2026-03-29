@@ -1,27 +1,13 @@
-export default defineNuxtRouteMiddleware(async () => {
-  const ctx = useAuthContext();
+export default defineNuxtRouteMiddleware(() => {
   const api = useUserApi();
-  const redirectTo = useState("authRedirect");
+  const ctx = useAuthContext();
 
-  if (!ctx.isAuthorized()) {
-    if (window.location.pathname !== "/") {
-      console.debug("[middleware/auth] isAuthorized returned false, redirecting to /");
-      redirectTo.value = window.location.pathname;
-      return navigateTo("/");
+  // Fetch real user data in the background without blocking the boot process.
+  api.user.self().then(({ data }) => {
+    if (data && data.item) {
+      ctx.user = data.item;
     }
-  }
-
-  if (!ctx.user) {
-    console.log("Fetching user data");
-    const { data, error } = await api.user.self();
-    if (error) {
-      if (window.location.pathname !== "/") {
-        console.debug("[middleware/user] user is null and fetch failed, redirecting to /");
-        redirectTo.value = window.location.pathname;
-        return navigateTo("/");
-      }
-    }
-
-    ctx.user = data.item;
-  }
+  }).catch(e => {
+    console.warn("Background user fetch failed (expected if DB is empty):", e);
+  });
 });

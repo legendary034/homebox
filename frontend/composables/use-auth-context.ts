@@ -8,9 +8,9 @@ export interface IAuthContext {
   get attachmentToken(): string | null;
 
   /**
-   * The current user object for the session. This is undefined if the session is not authorized.
+   * The current user object for the session. Defaults to a Guest user if unauthorized.
    */
-  user?: UserOut;
+  user: UserOut;
 
   /**
    * Returns true if the session is authorized.
@@ -40,7 +40,24 @@ class AuthContext implements IAuthContext {
   private static readonly cookieTokenKey = "hb.auth.session";
   private static readonly cookieAttachmentTokenKey = "hb.auth.attachment_token";
 
-  user?: UserOut;
+  private static readonly guestUser: UserOut = {
+    id: "00000000-0000-0000-0000-000000000000",
+    name: "Guest",
+    email: "guest@local.com",
+    groupId: "00000000-0000-0000-0000-000000000000",
+    groupName: "Home",
+    isOwner: true,
+    isSuperuser: true,
+  };
+
+  private _user?: UserOut;
+  get user(): UserOut {
+    return this._user || AuthContext.guestUser;
+  }
+  set user(val: UserOut) {
+    this._user = val;
+  }
+
   private _token: CookieRef<string | null>;
   private _attachmentToken: CookieRef<string | null>;
 
@@ -71,12 +88,12 @@ class AuthContext implements IAuthContext {
   }
 
   isAuthorized() {
-    console.debug("isAuthorized", this.token);
-    return this.token;
+    // Authentication disabled — always return true.
+    return true;
   }
 
   invalidateSession() {
-    this.user = undefined;
+    this._user = undefined;
 
     // Delete the cookies
     this._token.value = null;

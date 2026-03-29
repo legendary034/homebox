@@ -25,9 +25,9 @@ export default defineNuxtPlugin(({ vueApp }) => {
     fallbackLocale: "en",
     globalInjection: true,
     legacy: false,
-    locale: preferences.value.language || checkDefaultLanguage() || "en",
+    locale: (preferences.value as any).language || (checkDefaultLanguage() as any) || "en",
     messageCompiler,
-    messages: messages(),
+    messages: (messages as any)(),
   });
   vueApp.use(i18n);
 
@@ -40,10 +40,12 @@ export default defineNuxtPlugin(({ vueApp }) => {
 
 export const messages = () => {
   const messages: Record<string, any> = {};
-  const modules = import.meta.glob("~//locales/**.json", { eager: true });
+  const modules = import.meta.glob("~/locales/*.json", { eager: true });
   for (const path in modules) {
-    const key = path.slice(9, -5);
-    messages[key] = modules[path];
+    const parts = path.split("/");
+    const filename = parts[parts.length - 1];
+    const key = filename.replace(".json", "");
+    messages[key] = (modules[path] as any).default || modules[path];
   }
   return messages;
 };

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/hay-kot/httpkit/errchain"
 	"github.com/hay-kot/httpkit/server"
 	"github.com/rs/zerolog/log"
@@ -54,14 +53,12 @@ func (ctrl *V1Controller) HandleUserRegistration() errchain.HandlerFunc {
 //	@Security	Bearer
 func (ctrl *V1Controller) HandleUserSelf() errchain.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		token := services.UseTokenCtx(r.Context())
-		usr, err := ctrl.svc.User.GetSelf(r.Context(), token)
-		if usr.ID == uuid.Nil || err != nil {
-			log.Err(err).Msg("failed to get user")
-			return validate.NewRequestError(err, http.StatusInternalServerError)
+		usr := services.UseUserCtx(r.Context())
+		if usr == nil {
+			return validate.NewRequestError(fmt.Errorf("user not found in context"), http.StatusInternalServerError)
 		}
 
-		return server.JSON(w, http.StatusOK, Wrap(usr))
+		return server.JSON(w, http.StatusOK, Wrap(*usr))
 	}
 }
 
