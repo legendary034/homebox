@@ -185,6 +185,13 @@ func run(cfg *config.Config) error {
 		services.WithCurrencies(currencies),
 	)
 
+	// Ensure a default user exists for the no-authentication mode.
+	err = app.services.User.EnsureDefaultUser(context.Background())
+	if err != nil {
+		log.Error().Err(err).Msg("failed to ensure default user")
+		return err
+	}
+
 	// =========================================================================
 	// Start Server
 

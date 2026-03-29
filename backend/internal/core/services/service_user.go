@@ -246,3 +246,28 @@ func (svc *UserService) ChangePassword(ctx Context, current string, new string) 
 
 	return true
 }
+
+// EnsureDefaultUser checks if any users exist in the database and creates a default one if not.
+func (svc *UserService) EnsureDefaultUser(ctx context.Context) error {
+	users, err := svc.repos.Users.GetAll(ctx)
+	if err != nil {
+		return err
+	}
+
+	if len(users) > 0 {
+		return nil
+	}
+
+	log.Info().Msg("Default user check: no users found, creating default user")
+	_, err = svc.RegisterUser(ctx, UserRegistration{
+		Name:     "Admin",
+		Email:    "admin@homebox.local",
+		Password: "password", // Dummy password, auth is disabled anyway
+	})
+	if err != nil {
+		log.Err(err).Msg("Failed to create default user")
+		return err
+	}
+
+	return nil
+}
