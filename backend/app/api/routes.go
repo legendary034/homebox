@@ -41,19 +41,6 @@ func (a *app) debugRouter() *http.ServeMux {
 func (a *app) mountRoutes(r *chi.Mux, chain *errchain.ErrChain, repos *repo.AllRepos) {
 	registerMimes()
 
-	// 1. Define the exact path found via 'ls'
-	uploadDir := "/data/4a84b76a-c4ce-4b2e-9a9b-8629d37e799f/documents"
-
-	// 2. High-priority route for attachments
-	r.Get("/items/*/attachments/{attachmentID}", func(w http.ResponseWriter, r *http.Request) {
-		attachmentID := chi.URLParam(r, "attachmentID")
-		filePath := filepath.Join(uploadDir, attachmentID)
-
-		// Explicitly set the header so the browser doesn't download it as a binary
-		w.Header().Set("Content-Type", "image/jpeg")
-		http.ServeFile(w, r, filePath)
-	})
-
 	r.Get("/swagger/*", httpSwagger.Handler(
 		httpSwagger.URL("/swagger/doc.json"),
 	))
@@ -184,6 +171,19 @@ func (a *app) mountRoutes(r *chi.Mux, chain *errchain.ErrChain, repos *repo.AllR
 		r.Get("/reporting/bill-of-materials", chain.ToHandlerFunc(v1Ctrl.HandleBillOfMaterialsExport(), userMW...))
 
 		r.NotFound(http.NotFound)
+	})
+
+	r.Get("/items/{itemID}/attachments/{attachmentID}", func(w http.ResponseWriter, r *http.Request) {
+		attachmentID := chi.URLParam(r, "attachmentID")
+		// The exact path we verified with 'ls'
+		uploadDir := "/data/4a84b76a-c4ce-4b2e-9a9b-8629d37e799f/documents"
+		filePath := filepath.Join(uploadDir, attachmentID)
+
+		// Add logging to your terminal so you can see the 'Aha!' moment
+		fmt.Printf("SRE Debug: Serving %s\n", filePath)
+
+		w.Header().Set("Content-Type", "image/jpeg")
+		http.ServeFile(w, r, filePath)
 	})
 
 	r.NotFound(chain.ToHandlerFunc(notFoundHandler()))
