@@ -173,6 +173,13 @@ func (a *app) mountRoutes(r *chi.Mux, chain *errchain.ErrChain, repos *repo.AllR
 		r.NotFound(http.NotFound)
 	})
 
+	r.Get("/items/{id}/attachments/*", func(w http.ResponseWriter, r *http.Request) {
+		// This maps the URL request to the physical file on the disk
+		// Homebox usually stores these in /data/uploads inside the container
+		fs := http.StripPrefix("/items/", http.FileServer(http.Dir("/data/uploads")))
+		fs.ServeHTTP(w, r)
+	})
+
 	r.NotFound(chain.ToHandlerFunc(notFoundHandler()))
 }
 
