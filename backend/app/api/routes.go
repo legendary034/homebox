@@ -173,13 +173,14 @@ func (a *app) mountRoutes(r *chi.Mux, chain *errchain.ErrChain, repos *repo.AllR
 		r.NotFound(http.NotFound)
 	})
 
-	r.Get("/items/{itemID}/attachments/{attachmentID}", func(w http.ResponseWriter, r *http.Request) {
-		uploadDir := "/data/4a84b76a-c4ce-4b2e-9a9b-8629d37e799f/documents"
+	r.Get("/items/*/attachments/{attachmentID}", func(w http.ResponseWriter, r *http.Request) {
 		attachmentID := chi.URLParam(r, "attachmentID")
-		// Path inside the container: /data/uploads/<attachmentID>
+		// Use the exact GUID path found with 'ls'
+		uploadDir := "/data/4a84b76a-c4ce-4b2e-9a9b-8629d37e799f/documents"
 		filePath := filepath.Join(uploadDir, attachmentID)
 
-		// Serve the actual file from the disk
+		// Serve the file as an image
+		w.Header().Set("Content-Type", "image/jpeg") // Or detect type
 		http.ServeFile(w, r, filePath)
 	})
 
