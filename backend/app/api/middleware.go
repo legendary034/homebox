@@ -59,8 +59,13 @@ func (a *app) mwAuthToken(next errchain.Handler) errchain.Handler {
 		}
 
 		usr := users[0]
-		r = r.WithContext(context.WithValue(r.Context(), hashedToken, noAuthToken))
-		r = r.WithContext(services.SetUserCtx(r.Context(), &usr, noAuthToken))
+		// You MUST inject a User ID for the storage driver to work
+		// We use both the native SetUserCtx and an explicit "user_id" string key
+		ctx := context.WithValue(r.Context(), hashedToken, noAuthToken)
+		ctx = context.WithValue(ctx, "user_id", "1")
+		ctx = services.SetUserCtx(ctx, &usr, noAuthToken)
+
+		r = r.WithContext(ctx)
 		return next.ServeHTTP(w, r)
 	})
 }
