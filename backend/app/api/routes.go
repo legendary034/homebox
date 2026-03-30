@@ -174,7 +174,7 @@ func (a *app) mountRoutes(r *chi.Mux, chain *errchain.ErrChain, repos *repo.AllR
 	})
 
 	r.Get("/items/{itemID}/attachments/{attachmentID}", func(w http.ResponseWriter, r *http.Request) {
-		uploadDir := "/data/uploads"
+		uploadDir := "/data/4a84b76a-c4ce-4b2e-9a9b-8629d37e799f/documents"
 		attachmentID := chi.URLParam(r, "attachmentID")
 		// Path inside the container: /data/uploads/<attachmentID>
 		filePath := filepath.Join(uploadDir, attachmentID)
